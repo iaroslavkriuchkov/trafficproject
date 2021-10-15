@@ -22,7 +22,6 @@ df = pd.DataFrame()
 df = data_import('117', '01', 2017, 100)
 print(df.head())
 
-input
 '''
 # aggregation_time_period shows the period, by which the data is aggregated (in minutes)  
 aggregation_time_period = 10
