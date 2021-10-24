@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 import time
 import requests
 
-# Function for downloading csv data from an automatic traffic monitoring system of Finnish Transport Agency
+downdload_list = [['117', '01', 2017, 100],['117', '01', 2017, 101], ['117', '01', 2017, 102], ['117', '01', 2017, 103], ['117', '01', 2017, 104],['117', '01', 2017, 105]]
+
+# Function for downloading csv_file from an automatic traffic monitoring system of Finnish Transport Agency
 # url is the link to the exact file
 # The function returns the Pandas DataFrame with the data from specific TMS point on specific year on specific day
 def file_import (tms_id, region, year, day):
@@ -26,12 +28,27 @@ def file_import (tms_id, region, year, day):
     print(f"Download took {end_time-start_time:0.4f} seconds")
     return df
 
+# Function for downloading a massive of csv_files of TMS points
+def data_import(input_list):
+    df = pd.DataFrame()
+    df1 = pd.DataFrame()
+    for i in range(len(input_list)):
+        if i == 0:
+            df = file_import(input_list[i][0], input_list[i][1], input_list[i][2], input_list[i][3])
+        else :
+            df1 = file_import(input_list[i][0], input_list[i][1], input_list[i][2], input_list[i][3])
+            df = df.append(df1, ignore_index=True)
+    return df
+
+
 # The DataFrame is created based on downloaded data
 df = pd.DataFrame() 
-df = file_import('117', '01', 2017, 100)
+df = data_import(downdload_list)
 print(df.head())
+print(len(df))
+#print(df['total_time'][1015])
 
-'''
+#'''
 # aggregation_time_period shows the period, by which the data is aggregated (in minutes)  
 aggregation_time_period = 10
 
@@ -52,5 +69,4 @@ print(mean_speed_list)
 # The scatter plot in speed-flow plane
 plt.scatter(flow_list, mean_speed_list)
 plt.show()
-###
-'''
+#'''
