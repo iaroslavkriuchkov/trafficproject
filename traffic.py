@@ -1,6 +1,8 @@
 # Code for PhD project on traffic management
 # Iaroslav Kriuchkov
-# Aalto University
+# Aalto University School of Business
+# Department of Information and Service Management
+# Last update on 01 November 2021
 
 import pandas as pd
 import numpy as np
