@@ -58,7 +58,18 @@ aggregation_time_period = 10
 # speed_list is the list, which calculates the total speed of the vehicles with each of aggregation periods
 flow_list = [0 for i in range(int(24*60/aggregation_time_period))]
 speed_list = [0 for i in range(int(24*60/aggregation_time_period))]
+'''
+# Harmonic mean speed
+for i in range(len(df)):    
+    flow_list[int(df["total_time"][i]/(aggregation_time_period*60*100))] += 1
+    speed_list[int(df["total_time"][i]/(aggregation_time_period*60*100))] += (1/df["speed"][i])
+# Calcuation of arifmetic mean speed within the aggregation period
+mean_speed_list = [1 / (i / j) for i, j in zip(speed_list, flow_list)]
 
+
+
+'''
+# Arifmetic mean speed
 # Calcuation of flow and total speed
 for i in range(len(df)):    
     flow_list[int(df["total_time"][i]/(aggregation_time_period*60*100))] += 1
