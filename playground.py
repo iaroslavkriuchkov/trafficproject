@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import requests
+import datetime
 
 downdload_list = ['117', '01', 2017, 100]
-
+#'''
 def file_import (tms_id, region, year, day, delete_if_faulty = True, create_dates = True, split_directions = True):
     start_time = time.perf_counter() 
     column_names = ['id', 'year', 'day', 'hour', 'minute', 'second', 'hund_second', 'length', 'lane', 'direction', 'vehicle', 'speed', 'faulty', 'total_time', 'time_interval', 'queue_start']
@@ -16,9 +17,9 @@ def file_import (tms_id, region, year, day, delete_if_faulty = True, create_date
     if requests.get(url).status_code != 404:
         dfdir1 = pd.read_csv(url, delimiter = ";", names = column_names)
         print(f"Download successful - file for the sensor {tms_id} for the day {day} in year {year}")
+        dfdir1['date'] = datetime.date(year, 1, 1) + datetime.timedelta(day - 1)
         dfdir1 = dfdir1[dfdir1.faulty != 1]
         dfdir2 = dfdir1.groupby(dfdir1.direction).get_group(2).reset_index()
-        #dfdir2 = dfdir2.drop('index', axis=1, inplace=True)
         dfdir1 = dfdir1[dfdir1.direction != 2].reset_index()
     else:
         print(f"File for the sensor {tms_id} for the day {day} in year {year} doesn't exist. ")
@@ -33,3 +34,6 @@ df1, df2 = file_import(downdload_list[0], downdload_list[1], downdload_list[2], 
 
 print(df1.head())
 print(df2.head())
+#'''
+print(pd.to_datetime(100))
+print(datetime.date(downdload_list[2], 1, 1) + datetime.timedelta(downdload_list[3] - 1))
