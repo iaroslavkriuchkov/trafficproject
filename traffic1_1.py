@@ -15,23 +15,24 @@ downdload_list = [['162', '01', 2017, 100],['162', '01', 2017, 101], ['162', '01
 # Function for downloading csv_file from an automatic traffic monitoring system of Finnish Transport Agency
 # url is the link to the exact file
 # The function returns the Pandas DataFrame with the data from specific TMS point on specific year on specific day
-def file_import (tms_id, region, year, day):
+def file_import (tms_id, region, year, day, delete_if_faulty = True, create_dates = True, split_directions = True):
     start_time = time.perf_counter() 
     column_names = ['id', 'year', 'day', 'hour', 'minute', 'second', 'hund_second', 'length', 'lane', 'direction', 'vehicle', 'speed', 'faulty', 'total_time', 'time_interval', 'queue_start']
-    df = pd.DataFrame()
+    dfdir1 = pd.DataFrame()
+    dfdir2 = pd.DataFrame()
     url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/YYYY/REGION_ID/lamraw_TMS_YY_DD.csv'
     url = url.replace('YYYY', str(year)).replace('REGION_ID', region).replace('TMS', tms_id).replace('YY', str(year)[2:4]).replace('DD', str(day))
     if requests.get(url).status_code != 404:
-        df = pd.read_csv(url, delimiter = ";", names = column_names)
+        dfdir1 = pd.read_csv(url, delimiter = ";", names = column_names)
         print(f"Download successful - file for the sensor {tms_id} for the day {day} in year {year}")
-        for i in range(len(df)):
-            if df.at[i, "faulty"]== 1:
-                df.drop(i, axis=0, inplace=True)
+        for i in range(len(dfdir1)):
+            if dfdir1.at[i, "faulty"]== 1:
+                dfdir1.drop(i, axis=0, inplace=True)
     else:
         print(f"File for the sensor {tms_id} for the day {day} in year {year} doesn't exist. ")
     end_time = time.perf_counter()
     print(f"Download took {end_time-start_time:0.4f} seconds")
-    return df
+    return dfdir1, dfdir2
 
 # Function for downloading a massive of csv_files of TMS points
 def data_import(input_list):
