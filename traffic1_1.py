@@ -51,17 +51,38 @@ def data_import(input_list):
 def flow_speed_calculation (df_list, aggregation_time_period, mode):
     start_time = time.perf_counter()
     for i in range(len(df_list)):
-        df_list[i]['Aggregation'] = (df_list[i].hour * 60 + df_list[i].minute)/aggregation_time_period
-        df_list[i] = df_list[i].astype({'Aggregation':int})  
+        df_list[i]['aggregation'] = (df_list[i].hour * 60 + df_list[i].minute)/aggregation_time_period
+        df_list[i] = df_list[i].astype({'aggregation':int})  
     print(df_list)
     flow_speed = pd.DataFrame()
     df1 = pd.DataFrame()
     df2 = pd.DataFrame()
-    df1 = df_list[0].Aggregation.value_counts().sort_index()
+    for i in range(len(df_list)):
+        df1 = df_list[i].groupby(['id','date', 'aggregation', 'direction'], as_index = False).agg({'speed':'count'})
+        df2 = df_list[i].groupby(['id','date', 'aggregation', 'direction'], as_index = False).agg({'speed':'mean'})
+        if i == 0:
+            flow_speed['id'] = df1.id
+            flow_speed['date'] = df1.date
+            flow_speed['aggregation'] = df1.aggregation
+            flow_speed['speed']=df2.speed
+            flow_speed['flow']=df1.speed
+        else:
+            flow_speed['id'].append(df1.id).reset_index(drop=True)
+            flow_speed['date'].append(df1.date).reset_index(drop=True)
+            flow_speed['aggregation'].append(df1.aggregation).reset_index(drop=True)
+            flow_speed['speed'].append(df2.speed).reset_index(drop=True)
+            flow_speed['flow'].append(df1.speed).reset_index(drop=True)
+            df1 = pd.DataFrame()
+            df2 = pd.DataFrame()
+            #flow_speed['date'] = df1.date
+            #flow_speed['aggregation'] = df1.aggregation
+            #flow_speed['speed']=df2.speed
+            #flow_speed['flow']=df1.speed    
+    #df1 = df_list[0].Aggregation.value_counts().sort_index()
     #df1.columns = ['aggregation', 'flow']
-    df2 = df_list[0].speed.groupby(by=df_list[0].Aggregation).mean()
+    #df2 = df_list[0].speed.groupby(by=df_list[0].Aggregation).mean()
     #df2.columns = ['aggregation', 'speed']
-    plt.scatter(df1, df2)
+    #plt.scatter(df_list[0].total_time, df_list[0].speed)
     '''
     flow_speed['flow'] = [0 for i in range(int(24*60/aggregation_time_period))]
     flow_speed['total_speed'] = [0.0 for i in range(int(24*60/aggregation_time_period))]
@@ -80,8 +101,8 @@ def flow_speed_calculation (df_list, aggregation_time_period, mode):
     '''
     end_time = time.perf_counter()
     print(f"Execution time {end_time-start_time:0.4f} seconds")
-    print(df1)
-    print(df2)
+    #print(df1)
+    #print(df2)
     return flow_speed
 
 # The DataFrame is created based on downloaded data
@@ -90,7 +111,10 @@ data_list = [[]]
 data_list = data_import(downdload_list)
 #print(data_list)
 aggregation_time_period = 10
-flow_speed_calculation(data_list, aggregation_time_period, 1)
+df1 = flow_speed_calculation(data_list, aggregation_time_period, 1)
+print(df1.describe)
+plt.scatter(df1.flow, df1.speed)
+plt.show()
 #print(df.head())
 #print(len(df))
 '''
