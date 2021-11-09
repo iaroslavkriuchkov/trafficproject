@@ -2,38 +2,37 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from pandas.core.algorithms import value_counts
 import requests
 import datetime
+from scipy.stats.mstats import hmean
+import pathlib
 
-downdload_list = ['117', '01', 2017, 100]
-#'''
-def file_import (tms_id, region, year, day, delete_if_faulty = True, create_dates = True, split_directions = True):
-    start_time = time.perf_counter() 
-    column_names = ['id', 'year', 'day', 'hour', 'minute', 'second', 'hund_second', 'length', 'lane', 'direction', 'vehicle', 'speed', 'faulty', 'total_time', 'time_interval', 'queue_start']
-    dfdir1 = pd.DataFrame()
-    dfdir2 = pd.DataFrame()
-    url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/YYYY/REGION_ID/lamraw_TMS_YY_DD.csv'
-    url = url.replace('YYYY', str(year)).replace('REGION_ID', region).replace('TMS', tms_id).replace('YY', str(year)[2:4]).replace('DD', str(day))
+url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/2019/01/lamraw_10_19_DD.csv'
+for day in range(365):
+    start_time = time.perf_counter()  
+    url = url.replace('DD', str(day+1))
+    req = requests.get(url)
     if requests.get(url).status_code != 404:
-        dfdir1 = pd.read_csv(url, delimiter = ";", names = column_names)
-        print(f"Download successful - file for the sensor {tms_id} for the day {day} in year {year}")
-        dfdir1['date'] = datetime.date(year, 1, 1) + datetime.timedelta(day - 1)
-        dfdir1 = dfdir1[dfdir1.faulty != 1]
-        dfdir2 = dfdir1.groupby(dfdir1.direction).get_group(2).reset_index()
-        dfdir1 = dfdir1[dfdir1.direction != 2].reset_index()
+        url_content = req.content
+        filename = 'lamraw_10_19_DD.csv'
+        csv_file = open(filename.replace('DD', str(day+1)), 'wb')
+        csv_file.write(url_content)
+        csv_file.close()
+        end_time = time.perf_counter()
+        print(f"Download of {filename.replace('DD', str(day+1))} took {end_time-start_time:0.4f} seconds")
     else:
-        print(f"File for the sensor {tms_id} for the day {day} in year {year} doesn't exist. ")
-    end_time = time.perf_counter()
-    print(f"Download took {end_time-start_time:0.4f} seconds")
-    return dfdir1, dfdir2
+        print(f"File doesn't exist.")
 
-df1 = pd.DataFrame()
-df2 = pd.DataFrame()
-
-df1, df2 = file_import(downdload_list[0], downdload_list[1], downdload_list[2], downdload_list[3])
-
-print(df1.head())
-print(df2.head())
-#'''
-print(pd.to_datetime(100))
-print(datetime.date(downdload_list[2], 1, 1) + datetime.timedelta(downdload_list[3] - 1))
+'''
+current_dir = pathlib.Path.cwd()
+print(current_dir)
+for day in range(5):
+    path = 'trafficproject/data_17_146'
+    data_folder = pathlib.Path(path)
+    file_name = 'lamraw_'+path.split('_')[2]+'_'+path.split('_')[1]+'_'+str(day+1)+'.csv'
+    location = data_folder / file_name
+    print(location)
+    df=pd.read_csv(location, delimiter=';')
+    print(df.head)
+'''
