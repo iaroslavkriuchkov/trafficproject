@@ -18,6 +18,7 @@ import pathlib
 from pystoned import CQER
 from pystoned.constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
 from pystoned import dataset as dataset
+from pystoned.plot import plot2d
 
 # Function for downloading csv_file from an automatic traffic monitoring system of Finnish Transport Agency
 # url is the link to the exact file
@@ -71,13 +72,13 @@ def data_import(input_list):
 def local_data_import(folder):
     df = pd.DataFrame()
     directory = pathlib.Path(folder)
-    for day in range(270, 280):
+    for day in range(274, 278):
         file_name = 'lamraw_'+folder.split('_')[2]+'_'+folder.split('_')[1]+'_'+str(day+1)+'.csv'
         location = directory / file_name
         if (df.empty):
-            df = local_file_import(location, 2019, day)
+            df = local_file_import(location, 2018, day)
         else:
-            df = df.append(local_file_import(location, 2019, day), ignore_index=True)
+            df = df.append(local_file_import(location, 2018, day), ignore_index=True)
  #       print(df)
     return df
 
@@ -118,7 +119,7 @@ plt.scatter(flow_speed.density, flow_speed.flow)
 plt.show()
 '''
 # calculate the quantile model
-model = CQER.CQR(y=flow_speed.flow, x=flow_speed.density, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+model = CQER.CQR(y=flow_speed.flow, x=flow_speed.density, tau=0.05, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
 model.optimize(OPT_LOCAL)
 
 # display estimated alpha and beta
@@ -128,6 +129,8 @@ model.display_beta()
 # display estimated residuals
 model.display_positive_residual()
 model.display_negative_residual()
+plot2d(model, x_select=0, label_name="CQR estimated function", fig_name="CQR_2d")
+plt.show()
 '''
 path = 'trafficproject/data_21_116'
 data_list = local_data_import(path)
