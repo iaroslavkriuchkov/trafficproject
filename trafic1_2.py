@@ -15,6 +15,9 @@ import datetime
 from scipy.stats.mstats import hmean
 import os
 import pathlib
+from pystoned import CQER
+from pystoned.constant import CET_ADDI, FUN_PROD, OPT_LOCAL, RTS_VRS
+from pystoned import dataset as dataset
 
 # Function for downloading csv_file from an automatic traffic monitoring system of Finnish Transport Agency
 # url is the link to the exact file
@@ -44,13 +47,14 @@ def local_file_import (file_path, year, day, delete_if_faulty = True, create_dat
     start_time = time.perf_counter() 
     column_names = ['id', 'year', 'day', 'hour', 'minute', 'second', 'hund_second', 'length', 'lane', 'direction', 'vehicle', 'speed', 'faulty', 'total_time', 'time_interval', 'queue_start']
     dfdir1 = pd.DataFrame()
-    if os.path.exists(file_path) == True:
+    if (os.path.exists(file_path) == True) and (os.path.getsize(file_path) != 0):
         dfdir1 = pd.read_csv(file_path, delimiter = ";", names = column_names)
         print(f"Download successful - file {file_path}")
         dfdir1['date'] = datetime.date(year, 1, 1) + datetime.timedelta(day - 1)
         dfdir1 = dfdir1[dfdir1.faulty != 1]
     else:
         print(f"File {file_path} doesn't exist. ")
+        dfdir1 = pd.DataFrame()
     end_time = time.perf_counter()
     print(f"Download took {end_time-start_time:0.4f} seconds")
     return dfdir1
@@ -67,13 +71,13 @@ def data_import(input_list):
 def local_data_import(folder):
     df = pd.DataFrame()
     directory = pathlib.Path(folder)
-    for day in range(270, 360):
+    for day in range(270, 280):
         file_name = 'lamraw_'+folder.split('_')[2]+'_'+folder.split('_')[1]+'_'+str(day+1)+'.csv'
         location = directory / file_name
         if (df.empty):
-            df = local_file_import(location, 2018, day)
+            df = local_file_import(location, 2019, day)
         else:
-            df = df.append(local_file_import(location, 2018, day), ignore_index=True)
+            df = df.append(local_file_import(location, 2019, day), ignore_index=True)
  #       print(df)
     return df
 
@@ -86,9 +90,10 @@ def flow_speed_calculation (df, aggregation_time_period):
     time_agg = pd.DataFrame()
     space_agg = pd.DataFrame()
     time_agg = df.groupby(['id','date', 'aggregation', 'direction', 'lane'], as_index = False).agg(time_mean_speed=('speed','mean'), flow = ('speed','count'))
-    time_agg['qdivv'] = time_agg['flow'].div(time_agg['time_mean_speed'].values)
+    time_agg['hourlyflow'] = 60/aggregation_time_period * time_agg.flow
+    time_agg['qdivv'] = time_agg['hourlyflow'].div(time_agg['time_mean_speed'].values)
     print(time_agg)
-    space_agg = time_agg.groupby(['id','date', 'aggregation', 'direction'], as_index = False).agg(qdivvsum = ('qdivv', 'sum'), flow = ('flow', 'sum'))
+    space_agg = time_agg.groupby(['id','date', 'aggregation', 'direction'], as_index = False).agg(qdivvsum = ('qdivv', 'sum'), flow = ('hourlyflow', 'sum'))
     space_agg['space_mean_speed'] = 1/(space_agg.qdivvsum.div(space_agg.flow))
     space_agg['density'] = space_agg.flow.div(space_agg.space_mean_speed)
     print(space_agg)
@@ -99,7 +104,7 @@ def flow_speed_calculation (df, aggregation_time_period):
 # The DataFrame is created based on downloaded data
 df = pd.DataFrame() 
 
-path = 'trafficproject/data_19_11'
+path = 'trafficproject/data_18_147'
 df = local_data_import(path)
 aggregation_time_period = 10
 flow_speed = flow_speed_calculation(df, aggregation_time_period)
@@ -108,10 +113,21 @@ aggregation_time_period = 1
 data_list = local_data_import(path)
 
 flow_speed = flow_speed_calculation(data_list, aggregation_time_period, 0)
-'''
+
 plt.scatter(flow_speed.density, flow_speed.flow)
 plt.show()
+'''
+# calculate the quantile model
+model = CQER.CQR(y=flow_speed.flow, x=flow_speed.density, tau=0.5, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+model.optimize(OPT_LOCAL)
 
+# display estimated alpha and beta
+model.display_alpha()
+model.display_beta()
+
+# display estimated residuals
+model.display_positive_residual()
+model.display_negative_residual()
 '''
 path = 'trafficproject/data_21_116'
 data_list = local_data_import(path)

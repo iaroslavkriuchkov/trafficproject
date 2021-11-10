@@ -8,14 +8,14 @@ import datetime
 from scipy.stats.mstats import hmean
 import pathlib
 
-url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/2019/01/lamraw_11_19_DD.csv'
+url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/2019/01/lamraw_116_19_DD.csv'
 for day in range(365):
     url = url.replace('DD', str(day+1))
     start_time = time.perf_counter()  
     req = requests.get(url)
     if requests.get(url).status_code != 404:
         url_content = req.content
-        filename = 'lamraw_11_19_DD.csv'
+        filename = 'lamraw_116_19_DD.csv'
         csv_file = open(filename.replace('DD', str(day+1)), 'wb')
         csv_file.write(url_content)
         csv_file.close()
@@ -23,7 +23,7 @@ for day in range(365):
         print(f"Download of {filename.replace('DD', str(day+1))} took {end_time-start_time:0.4f} seconds")
     else:
         print(f"File doesn't exist.")
-    url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/2019/01/lamraw_11_19_DD.csv'
+    url = 'https://aineistot.liikennevirasto.fi/lam/rawdata/2019/01/lamraw_116_19_DD.csv'
 
 '''
 current_dir = pathlib.Path.cwd()
