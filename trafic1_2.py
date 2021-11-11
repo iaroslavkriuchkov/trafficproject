@@ -72,14 +72,14 @@ def data_import(input_list):
 def local_data_import(folder):
     df = pd.DataFrame()
     directory = pathlib.Path(folder)
-    for day in range(274, 278):
+    for day in range(306, 307):
         file_name = 'lamraw_'+folder.split('_')[2]+'_'+folder.split('_')[1]+'_'+str(day+1)+'.csv'
         location = directory / file_name
         if (df.empty):
-            df = local_file_import(location, 2018, day)
+            df = local_file_import(location, 2019, day)
         else:
-            df = df.append(local_file_import(location, 2018, day), ignore_index=True)
- #       print(df)
+            df = df.append(local_file_import(location, 2019, day), ignore_index=True)
+    print(df)
     return df
 
 # Calculation of flow and speed lists. Mode 0 is the arithmetic mean of speed, mode 1 is the harmonic mean of speed
@@ -105,21 +105,17 @@ def flow_speed_calculation (df, aggregation_time_period):
 # The DataFrame is created based on downloaded data
 df = pd.DataFrame() 
 
-path = 'trafficproject/data_18_147'
+path = 'trafficproject/data_21_126'
 df = local_data_import(path)
 aggregation_time_period = 10
 flow_speed = flow_speed_calculation(df, aggregation_time_period)
-'''
-aggregation_time_period = 1
-data_list = local_data_import(path)
 
-flow_speed = flow_speed_calculation(data_list, aggregation_time_period, 0)
+print(flow_speed)
 
-plt.scatter(flow_speed.density, flow_speed.flow)
-plt.show()
-'''
+
+
 # calculate the quantile model
-model = CQER.CQR(y=flow_speed.flow, x=flow_speed.density, tau=0.05, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
+model = CQER.CQR(y=flow_speed.flow, x=flow_speed.density, tau=0.75, z=None, cet=CET_ADDI, fun=FUN_PROD, rts=RTS_VRS)
 model.optimize(OPT_LOCAL)
 
 # display estimated alpha and beta
@@ -129,16 +125,11 @@ model.display_beta()
 # display estimated residuals
 model.display_positive_residual()
 model.display_negative_residual()
+
 plot2d(model, x_select=0, label_name="CQR estimated function", fig_name="CQR_2d")
 plt.show()
-'''
-path = 'trafficproject/data_21_116'
-data_list = local_data_import(path)
 
-aggregation_time_period = 2
-df1 = flow_speed_calculation(data_list, aggregation_time_period, 1)
-print(df1.mean_speed.describe)
-plt.scatter(df1.density, df1.flow)
+'''
 #plt.show()
 #plt.scatter(df1.density, df1.flow)
 #plt.hist(df1.mean_speed)
